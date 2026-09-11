@@ -1,0 +1,2 @@
+# dff-script
+npx script
