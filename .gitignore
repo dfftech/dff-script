@@ -1,0 +1,204 @@
+# --- Dependencies (npm / yarn / bun / pnpm) ---
+node_modules/
+.bun/
+bun.*
+jspm_packages/
+typings/
+.yarn/
+.pnp.*
+.yarnrc.yml
+
+# --- Build & tooling output ---
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+.nyc_output/
+public/
+static/
+serverless/
+.next/
+.angular/cache/
+
+# --- Lockfiles (library projects: not committed) ---
+bun.lock
+bun.lockb
+package-lock.json
+yarn.lock
+.pnpm-lock.yaml
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+.pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Caches ---
+.npm/
+.eslintcache
+.tmp/
+.cache/
+# Turborepo task cache (turbo.json itself stays committed)
+.turbo/
+
+# --- Environment / secrets (keep examples) ---
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# --- Docker: local overrides & state only (keep committed Dockerfiles) ---
+docker-compose.override.yml
+docker-compose.*.local.yml
+.docker/
+
+# --- Micro-frontends (Module Federation / single-spa) ---
+# Module Federation runtime/build cache and generated remote types
+.mf/
+.federation*
+@mf-types/
+# Vite / Module Federation plugin temp files
+*.timestamp*
+
+# --- OS generated files ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.fuse_hidden*
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.tmp
+*.lnk
+
+# --- IDEs and editors ---
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+.nbproject/
+*.kate-swp
+*.iml
+*.ipr
+*.iws
+*.ws
+*.swp
+*.swo
+*~
+
+# JetBrains user-specific stuff
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+.idea/**/stores.xml
+.history/
+.fleet/
+
+# --- Backup files ---
+*.bak
+*.old
+*.orig
+*.rej
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+
+# --- Compiled files / binaries ---
+*.class
+*.war
+*.ear
+*.jar
+*.tgz
+*.exe
+*.dll
+*.lib
+*.so
+*.dylib
+*.pdb
+*.app
+*.out
+*.o
+*.a
+
+# --- Certificates ---
+*.pem
+*.crt
+*.key
+*.p12
+*.pfx
+
+# --- Encore.dev ---
+encore.dev/
+.encore
+encore.gen.go
+encore.gen.cue
+/encore.gen
+
+# --- Rust / Cargo ---
+/target/
+/**/*.rs.bk
+# Cargo.lock is conventionally ignored for libraries; commit it for binaries/workspaces.
+Cargo.lock
+Cargo.lock.orig
+*.profraw
+*.gcda
+*.gcno
+
+# --- Java & Spring Boot / Gradle ---
+bin/
+.gradle/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!**/src/main/**/META-INF/*.kotlin_module
+**/target/
+**/target/classes/
+**/target/dependency/
+**/target/maven-archiver/
+**/target/maven-status/
+**/target/surefire-reports/
+**/logs/
+**/tmp/
+gradle-app.setting
+.project
+.classpath
+.settings/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+*.eggs/
+*.whl
+pip-wheel-metadata/
+.tox/
+.coverage
+.pytest_cache/
+htmlcov/
+.mypy_cache/
+.dmypy.json
+.pyre/
+
+# --- Virtualenv ---
+venv/
+ENV/
+env/
+.venv/
