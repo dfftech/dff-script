@@ -2,6 +2,7 @@ import { afterEach, expect, test } from 'bun:test';
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { JsonToCsv } from 'dff-util';
 import { run } from '../src/cli';
 import { generateHbs, hbsTypeFromCommand, parseData, type HbsData } from '../src/hbs/generate';
 import { mappingCommands, mappingTypes, parseMapping } from '../src/hbs/mapping';
@@ -48,6 +49,11 @@ test('mapping parser reads path, prefix, overwrite, and hbs flags', () => {
   expect(hbsTypeFromCommand('hbs-cd-config')).toBe('cd-config');
   expect(hbsTypeFromCommand('hbs-cd-ms')).toBe('cd-ms');
   expect(rows.filter(row => row.type === 'cd-ms').map(row => row.name)).toEqual(['deploy.yaml', 'svc.yaml']);
+});
+
+test('JsonToCsv roundtrips mapping rows back through CsvToJson', () => {
+  const rows = parseMapping(mappingCsv);
+  expect(parseMapping(JsonToCsv(rows))).toEqual(rows);
 });
 
 test('list prints every mapping type with an hbs- prefix', async () => {

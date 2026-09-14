@@ -1,7 +1,6 @@
 import { CallHbs, type RequestBodyType } from 'dff-util';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fetchText, HBS_BASE, loadMapping, type FetchText, type MappingRow } from './mapping';
-import { ensureXmlHttpRequest } from './xhr';
 
 export type HbsData = RequestBodyType;
 
@@ -12,7 +11,7 @@ export type GenerateResult = {
 
 export type GenerateDeps = {
   fetchText?: FetchText;
-  render?: (template: string, data: HbsData) => string;
+  render?: (template: string, data: HbsData) => string | Promise<string>;
 };
 
 export async function generateHbs(
@@ -63,9 +62,8 @@ export function hbsTypeFromCommand(command: string): string | undefined {
   return type || undefined;
 }
 
-function renderHbs(template: string, data: HbsData): string {
-  ensureXmlHttpRequest();
-  const result = CallHbs(template, data);
+async function renderHbs(template: string, data: HbsData): Promise<string> {
+  const result = await CallHbs(template, data);
   if (typeof result !== 'string') throw new Error('HBS rendering returned multiple results.');
   return result;
 }
@@ -75,12 +73,12 @@ async function planFile(
   data: HbsData,
   root: string,
   getText: FetchText,
-  render: (template: string, data: HbsData) => string,
+  render: (template: string, data: HbsData) => string | Promise<string>,
 ) {
   const source = `${HBS_BASE}/${row.type}/${row.name}.hbs`;
   const template = await getText(source);
-  const content = row.hbs ? render(template, data) : template;
-  const prefix = row.prefix.includes('{{') ? render(row.prefix, data) : row.prefix;
+  const content = row.hbs ? await render(template, data) : template;
+  const prefix = row.prefix.includes('{{') ? await render(row.prefix, data) : row.prefix;
   if (/[\\/]/.test(prefix)) throw new Error(`Prefix must not contain path separators: ${prefix}`);
   const relativePath = join(row.path, `${prefix}${row.name}`);
   return { ...row, content, relative: relativePath, path: join(root, relativePath) };

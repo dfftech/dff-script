@@ -1,4 +1,4 @@
-import Papa from 'papaparse';
+import { CsvToJson } from 'dff-util';
 
 export const HBS_BASE = 'https://raw.githubusercontent.com/dfftech/sss-hbs/main';
 
@@ -13,8 +13,6 @@ export type MappingRow = {
 
 export type FetchText = (url: string) => Promise<string>;
 
-type CsvRecord = Record<string, string | boolean | number | null>;
-
 export async function fetchText(url: string): Promise<string> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
@@ -22,16 +20,12 @@ export async function fetchText(url: string): Promise<string> {
 }
 
 export function parseMapping(csv: string): MappingRow[] {
-  const { data, errors, meta } = Papa.parse<CsvRecord>(csv.replace(/^\uFEFF/, ''), {
-    header: true,
-    skipEmptyLines: true,
-    transform: value => value.trim().replace(/\u00a0/g, ' '),
-  });
-  if (errors.length) throw new Error(`Invalid mapping.csv: ${errors[0]!.message}`);
-  if (meta.fields?.join(',') !== 'type,path,name,prefix,overwrite,hbs') {
+  const data = CsvToJson(csv);
+  if (!data.length) throw new Error('mapping.csv has no rows.');
+  const header = Object.keys(data[0]!).join(',');
+  if (header !== 'type,path,name,prefix,overwrite,hbs') {
     throw new Error('Unexpected mapping.csv header. Expected type,path,name,prefix,overwrite,hbs.');
   }
-  if (!data.length) throw new Error('mapping.csv has no rows.');
   return data.map((row, index) => {
     const type = cell(row.type);
     const path = cell(row.path);
@@ -62,7 +56,7 @@ export function mappingCommands(rows: MappingRow[]): string[] {
 
 function cell(value: string | boolean | number | null | undefined): string {
   if (value == null) return '';
-  return String(value).trim();
+  return String(value).trim().replace(/\u00a0/g, ' ');
 }
 
 function flag(value: string | boolean | number | null | undefined, field: string, row: number): boolean {

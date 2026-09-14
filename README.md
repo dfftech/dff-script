@@ -1,6 +1,6 @@
 # dff-script
 
-A Bun 1.4 CLI that generates files from [sss-hbs](https://github.com/dfftech/sss-hbs) templates. Mapping and Handlebars sources are read from that repository. Rendering uses `CallHbs` from `dff-util`.
+A Bun 1.4 CLI that generates files from [sss-hbs](https://github.com/dfftech/sss-hbs) templates. Mapping and Handlebars sources are read from that repository. CSV mapping uses `CsvToJson` from `dff-util`; rendering uses `CallHbs`.
 
 ```sh
 bunx dff-script list
