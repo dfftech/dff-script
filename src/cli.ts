@@ -7,7 +7,9 @@ const usage = `Usage: bunx dff-script <list|hbs-<type>> [data]
 Generate files from sss-hbs mapping in the current directory.
 
 Example:
-  bunx dff-script hbs-cd-ms '{"tenant":"dff","module":"astropeace","name":"auth","type":"ms"}'`;
+  bunx dff-script hbs-cd-ms '{"tenant":"dff","module":"astropeace","name":"auth","type":"ms"}'
+  bunx dff-script hbs-cd-ms dff:astropeace:auth:ms
+  bunx dff-script hbs-web-module user`;
 
 export async function run(args = process.argv.slice(2), deps: GenerateDeps = {}) {
   if (!args.length || (args.length === 1 && ['--help', '-h'].includes(args[0]!))) {

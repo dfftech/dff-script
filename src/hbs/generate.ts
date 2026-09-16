@@ -44,16 +44,14 @@ export async function generateHbs(
 export function parseData(raw: string): HbsData {
   const text = raw.trim();
   if (!text) return {};
-  try {
-    return asObject(JSON.parse(text));
-  } catch {
-    const quoted = text.replace(/([{,]\s*)([A-Za-z_][\w]*)\s*:/g, '$1"$2":');
-    try {
-      return asObject(JSON.parse(quoted));
-    } catch {
-      throw new Error('Data must be a JSON object, for example {"tenant":"dff","module":"astropeace","name":"auth","type":"ms"}.');
-    }
-  }
+  const parsed = tryJson(text);
+  if (parsed.ok) return asData(parsed.value);
+
+  const quoted = text.replace(/([{,]\s*)([A-Za-z_][\w]*)\s*:/g, '$1"$2":');
+  const parsedQuoted = tryJson(quoted);
+  if (parsedQuoted.ok) return asObject(parsedQuoted.value);
+
+  return stringData(text);
 }
 
 export function hbsTypeFromCommand(command: string): string | undefined {
@@ -78,9 +76,10 @@ async function planFile(
   const source = `${HBS_BASE}/${row.type}/${row.name}.hbs`;
   const template = await getText(source);
   const content = row.hbs ? await render(template, data) : template;
+  const path = row.path.includes('{{') ? await render(row.path, data) : row.path;
   const prefix = row.prefix.includes('{{') ? await render(row.prefix, data) : row.prefix;
   if (/[\\/]/.test(prefix)) throw new Error(`Prefix must not contain path separators: ${prefix}`);
-  const relativePath = join(row.path, `${prefix}${row.name}`);
+  const relativePath = join(path, `${prefix}${row.name}`);
   return { ...row, content, relative: relativePath, path: join(root, relativePath) };
 }
 
@@ -109,4 +108,26 @@ function asObject(value: unknown): HbsData {
     throw new Error('Data must be a JSON object.');
   }
   return value as HbsData;
+}
+
+function asData(value: unknown): HbsData {
+  return typeof value === 'string' ? stringData(value) : asObject(value);
+}
+
+function stringData(value: string): HbsData {
+  const keys = ['tenant', 'module', 'name', 'type'] as const;
+  const parts = value.split(':');
+  if (parts.length === 1) return { name: value };
+  if (parts.length > keys.length || parts.some(part => !part)) {
+    throw new Error('String data must be a name or tenant:module[:name[:type]].');
+  }
+  return Object.fromEntries(parts.map((part, index) => [keys[index], part])) as HbsData;
+}
+
+function tryJson(text: string): { ok: true; value: unknown } | { ok: false } {
+  try {
+    return { ok: true, value: JSON.parse(text) };
+  } catch {
+    return { ok: false };
+  }
 }

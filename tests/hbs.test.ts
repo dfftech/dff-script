@@ -13,6 +13,8 @@ cd-config,cd,config.yaml,,false,true
 cd-config,cd,cred.yaml,,false,true
 cd-ms,cd,deploy.yaml,{{to_kebab_case module}}-{{to_kebab_case name}}-{{to_kebab_case type}}.,false,true
 cd-ms,cd,svc.yaml,{{to_kebab_case module}}-{{to_kebab_case name}}-{{to_kebab_case type}}.,false,true
+web-module,modules/{{to_kebab_case name}},module.page.tsx,,false,true
+web-module,modules/{{to_kebab_case name}}/components,list.tsx,{{to_kebab_case name}}.,false,true
 `;
 
 const data = { tenant: 'dff', module: 'astropeace', name: 'auth', type: 'ms' };
@@ -36,6 +38,8 @@ async function fetchText(url: string) {
   if (url.endsWith('/cd-ms/svc.yaml.hbs')) return 'svc {{to_kebab_case name}}';
   if (url.endsWith('/cd-config/config.yaml.hbs')) return 'config {{to_kebab_case module}}';
   if (url.endsWith('/cd-config/cred.yaml.hbs')) return 'cred {{to_kebab_case tenant}}';
+  if (url.endsWith('/web-module/module.page.tsx.hbs')) return 'page {{to_kebab_case name}}';
+  if (url.endsWith('/web-module/list.tsx.hbs')) return 'list {{to_kebab_case name}}';
   if (url.endsWith('/gitignore/.gitignore.hbs')) return 'node_modules/\n';
   throw new Error(`unexpected fetch ${url}`);
 }
@@ -44,8 +48,8 @@ const deps = { fetchText, render };
 
 test('mapping parser reads path, prefix, overwrite, and hbs flags', () => {
   const rows = parseMapping(mappingCsv);
-  expect(mappingTypes(rows)).toEqual(['gitignore', 'cd-config', 'cd-ms']);
-  expect(mappingCommands(rows)).toEqual(['hbs-gitignore', 'hbs-cd-config', 'hbs-cd-ms']);
+  expect(mappingTypes(rows)).toEqual(['gitignore', 'cd-config', 'cd-ms', 'web-module']);
+  expect(mappingCommands(rows)).toEqual(['hbs-gitignore', 'hbs-cd-config', 'hbs-cd-ms', 'hbs-web-module']);
   expect(hbsTypeFromCommand('hbs-cd-config')).toBe('cd-config');
   expect(hbsTypeFromCommand('hbs-cd-ms')).toBe('cd-ms');
   expect(rows.filter(row => row.type === 'cd-ms').map(row => row.name)).toEqual(['deploy.yaml', 'svc.yaml']);
@@ -90,6 +94,26 @@ test('hbs-cd-ms writes prefixed files from mapping and CallHbs output', async ()
   expect(await readFile(join(dir, 'cd/astropeace-auth-ms.svc.yaml'), 'utf8')).toBe('svc auth');
 });
 
+test('hbs-web-module accepts a plain module name and renders paths', async () => {
+  const dir = await temp();
+  const result = await generateHbs('web-module', parseData('user'), dir, deps);
+  expect(result.created.sort()).toEqual([
+    'modules/user/components/user.list.tsx',
+    'modules/user/module.page.tsx',
+  ].sort());
+  expect(await readFile(join(dir, 'modules/user/module.page.tsx'), 'utf8')).toBe('page user');
+  expect(await readFile(join(dir, 'modules/user/components/user.list.tsx'), 'utf8')).toBe('list user');
+});
+
+test('hbs-web-module also accepts a JSON string module name', async () => {
+  const dir = await temp();
+  const result = await generateHbs('web-module', parseData('"adminUser"'), dir, deps);
+  expect(result.created.sort()).toEqual([
+    'modules/adminuser/components/adminuser.list.tsx',
+    'modules/adminuser/module.page.tsx',
+  ].sort());
+});
+
 test('hbs false copies the template without rendering', async () => {
   const dir = await temp();
   const result = await generateHbs('gitignore', {}, dir, deps);
@@ -126,6 +150,18 @@ test('cannot write through a path that is not a directory', async () => {
 test('parseData accepts JSON and unquoted object keys', () => {
   expect(parseData('{"tenant":"dff","name":"auth"}')).toEqual({ tenant: 'dff', name: 'auth' });
   expect(parseData('{tenant:"dff", module:"astropeace", name:"auth", type:"ms"}')).toEqual(data);
+  expect(parseData('user')).toEqual({ name: 'user' });
+  expect(parseData('"user"')).toEqual({ name: 'user' });
+  expect(() => parseData('["user"]')).toThrow('Data must be a JSON object');
+});
+
+test('parseData accepts colon shorthand strings', () => {
+  expect(parseData('dff:astropeace:auth:ms')).toEqual(data);
+  expect(parseData('dff:astropeace:auth')).toEqual({ tenant: 'dff', module: 'astropeace', name: 'auth' });
+  expect(parseData('dff:astropeace')).toEqual({ tenant: 'dff', module: 'astropeace' });
+  expect(parseData('"dff:astropeace:auth:ms"')).toEqual(data);
+  expect(() => parseData('dff:')).toThrow('String data must be a name or tenant:module');
+  expect(() => parseData('dff:astropeace:auth:ms:extra')).toThrow('String data must be a name or tenant:module');
 });
 
 test('CLI help and invalid commands do not create files', async () => {
